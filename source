@@ -1,0 +1,465 @@
+#include <stdio.h>
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
+#include <time.h>
+#include <math.h>
+
+
+
+//THE PAINTER HER D�NG� BA�INDA TABLODAK� GR�LER� TEM�ZLER, MATR�STEK� YEN� D�Z�L�M� TABLOYA D�KER
+int painter(int deneme[8][8], int hamle1) {
+	if (hamle1 == 1) {
+		al_draw_filled_circle(80 * (3) + 35, 80 * (3) + 35, 30, al_map_rgb(255, 255, 255));
+		al_draw_filled_circle(80 * (4) + 35, 80 * (4) + 35, 30, al_map_rgb(255, 255, 255));
+		al_draw_filled_circle(80 * (4) + 35, 80 * (3) + 35, 30, al_map_rgb(0, 0, 0));
+		al_draw_filled_circle(80 * (3) + 35, 80 * (4) + 35, 30, al_map_rgb(0, 0, 0));
+	}
+	else {
+		for (int f = 0;f < 8;f++) {
+			for (int g = 0;g < 8;g++) {
+				if (deneme[f][g] == 3) {
+					al_draw_filled_circle(80 * (g)+35, 80 * (f)+35, 30, al_map_rgb(12, 69, 18));
+				}
+				else if (deneme[f][g] == 2) {
+					al_draw_filled_circle(80 * (g)+35, 80 * (f)+35, 30, al_map_rgb(0, 0, 0));
+				}
+				else if (deneme[f][g] == 1) {
+					al_draw_filled_circle(80 * (g)+35, 80 * (f)+35, 30, al_map_rgb(255, 255, 255));
+				}
+			}
+		}
+	}
+	return deneme;
+}
+
+//THE PATHFINDER HAMLE SIRASI GELEN OYUNCUNUN OLASI HAMLELER�N� G�STER�R
+int pathfinder(int gecici1[8][8],int hamle1, int hamle2) {
+
+	//sa� olas� hamle
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			if (gecici1[i][j] == hamle1) {
+
+				//sa� olas� hamle
+				if (gecici1[i][j + 1] == hamle2) {
+					for (int t = j + 2; t < 8;t++) {
+						if (gecici1[i][t] == 0 && gecici1[i][t - 1] == hamle2) {
+							gecici1[i][t] = 3;
+						}
+					}
+				}
+
+				//sol olas� hamle  
+
+				if (gecici1[i][j - 1] == hamle2) {
+					for (int t = j - 2; t >= 0;t--) {
+						if (gecici1[i][t] == 0 && gecici1[i][t + 1] == hamle2) {
+							gecici1[i][t] = 3;
+						}
+					}
+				}
+
+
+				//a�a�� olas� hamle 33333
+
+				if (gecici1[i + 1][j] == hamle2) {
+					for (int t = i + 2; t < 8;t++) {
+						if (gecici1[t][j] == 0 && gecici1[t - 1][j] == hamle2) {
+							gecici1[t][j] = 3;
+						}
+					}
+				}
+
+				//a�a�� olas� hamle 
+
+				if (gecici1[i - 1][j] == hamle2) {
+					for (int t = i - 2; t >= 0;t--) {
+						if (gecici1[t][j] == 0 && gecici1[t + 1][j] == hamle2) {
+							gecici1[t][j] = 3;
+						}
+					}
+				}
+
+
+
+
+				//beyaz sa��st olas� hamle  
+
+
+				if (gecici1[i - 1][j + 1] == hamle2) {
+					for (int u = i - 2; u >= 0;u--) {
+						for (int t = j + 2; t < 8; t++) {
+							if (gecici1[u][t] == 0 && gecici1[u + 1][t - 1] == hamle2) {
+								gecici1[u][t] = 3;
+							}
+						}
+					}
+				}
+
+
+				//beyaz sol�st olas� hamle 
+
+				if (gecici1[i - 1][j - 1] == hamle2) {
+					for (int t = j - 2; t >= 0;t--) {
+						for (int u = i - 2; u >= 0; u--) {
+							if (gecici1[u][t] == 0 && gecici1[u + 1][t + 1] == hamle2) {
+								gecici1[u][t] = 3;
+							}
+						}
+					}
+				}
+
+
+				//beyaz solalt olas� hamle  
+
+
+				if (gecici1[i + 1][j - 1] == hamle2) {
+					for (int u = i + 2; u < 8;u++) {
+						for (int t = j - 2; t >= 0; t--) {
+							if (gecici1[u][t] == 0 && gecici1[u - 1][t + 1] == hamle2) {
+								gecici1[u][t] = 3;
+							}
+						}
+					}
+				}
+
+				//beyaz sa�alt olas� hamle  
+
+
+				if (gecici1[i + 1][j + 1] == hamle2) {
+					for (int u = i + 2; u < 8;u++) {
+						for (int t = j + 2; t < 0; t++) {
+							if (gecici1[u][t] == 0 && gecici1[u - 1][t - 1] == hamle2) {
+								gecici1[u][t] = 3;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return gecici1;
+}
+
+//THE EXPLORER AZ�NCE THE PATHFINDERIN BULDU�U OLASI HAMLELER�N YERLER�N� KAYDEDER
+int explorer(int gecici2[50][2], int gecici3[8][8]) {
+	int k = 0;
+
+	for (int i = 0; i < 8;i++) {
+		for (int j = 0;j < 8;j++) {
+			if (gecici3[i][j] == 3) {
+				for (k = 0;k < 64;k++) {
+					gecici2[k][0] = i;
+					gecici2[k][1] = j;
+				}
+			}
+		}
+	}
+	return gecici2;
+}
+
+// THE CONTROLLER SE��LEN HAMLEN�N  GR� OLDU�UNU DO�RULAR VE NEREDE OLDU�UNU MATR�XE KAYDEDER
+int controller(int a, int b, int gecici5[50][2]) {
+	int c, n = 0, p = 0;
+	c = 99;
+	for (int i = 0;i < 50;i++) {
+		if (gecici5[i][0] != 9) {
+			if (b - ((35) + ((gecici5[i][0]) * 80)) < 20) {
+				if (a - ((35) + ((gecici5[i][1]) * 80)) < 20) {
+					gecici5[i][0] = n;
+					gecici5[i][1] = p;
+					c = ((10 * n) + p);
+					return c;
+				}
+			}
+		}
+	}
+	return c;
+}
+
+// THE CHANGER OYUNCUNUN SE��M�N�  MATR�XE UYGULAR
+int changer(int gecici4[8][8], int hamle1, int hamle2) {
+	//sa�a do�ru change
+	for (int i = 0; i < 8;i++) {
+		for (int j = 0;j < 8;j++) {
+			if (gecici4[i][j] == 4) {
+				if (gecici4[i][j + 1] == hamle2) {
+					for (int t = j + 2; t < 8;t++) {
+						if (gecici4[i][t] == hamle1) {
+							for (int h = j + 1;h < t;h++) {
+								gecici4[i][h] = hamle1;
+							}
+						}
+					}
+				}
+
+
+
+				//yukar� do�ru change
+
+				else if (gecici4[i - 1][j] == hamle2) {
+					for (int t = i - 2;t >= 0;t--) {
+						if (gecici4[t][j] == hamle1) {
+							for (int h = i - 1;h > t;h--) {
+								gecici4[h][j] = hamle1;
+							}
+						}
+					}
+				}
+
+
+				//sola do�ru change
+
+				else if (gecici4[i][j - 1] == hamle2) {
+					for (int t = j - 2;t >= 0;t--) {
+						if (gecici4[i][t] == hamle1) {
+							for (int h = j - 1;h > t;h--) {
+								gecici4[i][h] = hamle1;
+							}
+						}
+					}
+				}
+
+				//a�a�� do�ru change
+
+				else if (gecici4[i + 1][j] == hamle2) {
+					for (int t = i + 2;t < 8;t++) {
+						if (gecici4[t][j] == hamle1) {
+							for (int h = i + 1;h < t;h++) {
+								gecici4[h][j] = hamle1;
+							}
+						}
+					}
+				}
+
+				//sa� �ste do�ru change
+
+				else if (gecici4[i - 1][j + 1] == hamle2) {
+					for (int t = i - 2;t >= 0;t--) {
+						for (int m = j + 2;m < 8;m++) {
+							if (gecici4[t][m] == hamle1) {
+								for (int h = i - 1;h > t;h--) {
+									for (int l = j + 1;l < m;l++) {
+										gecici4[h][l] = hamle1;
+									}
+								}
+							}
+						}
+					}
+				}
+
+				//sol �ste do�ru change
+
+				else if (gecici4[i - 1][j - 1] == hamle2) {
+					for (int t = i - 2;t >= 0;t--) {
+						for (int m = j - 2;m >= 0;m--) {
+							if (gecici4[t][m] == hamle1) {
+								for (int h = i - 1;h > t;h--) {
+									for (int l = j - 1;l > m;l--) {
+										gecici4[h][l] = hamle1;
+									}
+								}
+							}
+						}
+					}
+				}
+
+				//sol alta do�ru change
+				else if (gecici4[i + 1][j - 1] == hamle2) {
+					for (int t = i + 2;t < 8;t++) {
+						for (int m = j - 2;m >= 0;m--) {
+							if (gecici4[t][m] == hamle1) {
+								for (int h = i + 1;h < t;h++) {
+									for (int l = j - 1;l > m;l--) {
+										gecici4[h][l] = hamle1;
+									}
+								}
+							}
+						}
+					}
+				}
+
+
+				//sa� alta do�ru change
+
+				else if (gecici4[i + 1][j + 1] == hamle2) {
+					for (int t = i + 2;t < 8;t++) {
+						for (int m = j + 2;m < 8;m++) {
+							if (gecici4[t][m] == hamle1) {
+								for (int h = i + 1;h < t;h++) {
+									for (int l = j + 1;l < m;l++) {
+										gecici4[h][l] = hamle1;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return gecici4;
+}
+
+int main() {
+
+	//TANIMLAMALAR
+	float xpos = 555;
+	float ypos = 555;
+	int i = 0, j = 0, t = 0, u = 0;
+	int oyun[8][8] = { 0 };
+	oyun[3][3] = 1;
+	oyun[3][4] = 2;
+	oyun[4][4] = 1;
+	oyun[4][3] = 2;
+	int k = 0, m = 0, z, w, q;
+	
+	int sira = 1;
+	int karsihamle = 2;
+	int hamle = 1;
+	int depo[50][2]  ;
+
+
+	al_init_primitives_addon();
+
+	ALLEGRO_DISPLAY* display = NULL;
+	ALLEGRO_EVENT_QUEUE* queue = NULL;
+	ALLEGRO_TIMER* timer;
+
+
+	al_init();
+	al_install_keyboard();
+	al_install_mouse();
+
+	display = al_create_display(630, 630);
+	queue = al_create_event_queue();
+	timer = al_create_timer(1.0 / 20);
+	al_start_timer(timer);
+
+
+	al_register_event_source(queue, al_get_display_event_source(display));
+	al_register_event_source(queue, al_get_keyboard_event_source());
+	al_register_event_source(queue, al_get_mouse_event_source());
+	al_register_event_source(queue, al_get_timer_event_source(timer));
+
+
+	while (1) {
+		ALLEGRO_EVENT ev;
+		al_wait_for_event(queue, &ev);
+		al_clear_to_color(al_map_rgb(12, 69, 18));
+		
+		for (i = 0; i < 50;i++) {
+			depo[i][0] = 9;
+			depo[i][1] = 9;
+		}
+		
+		//�ubuklar
+		for (int cubuk = 70; cubuk < 600; cubuk += 80) {
+			al_draw_filled_rectangle(cubuk, 0, cubuk + 10, 630, al_map_rgb(255, 0, 0));
+
+		}
+		for (int cubuk = 70; cubuk < 600; cubuk += 80) {
+			al_draw_filled_rectangle(0, cubuk, 630, cubuk + 10, al_map_rgb(255, 0, 0));
+		}
+
+		//D�NG� BA�I BOYAMA
+		painter(oyun, hamle);
+
+		// DENEME 
+		if (hamle == 1) {
+			for (int i = 0; i < 8;i++) {
+				for (int j = 0;j < 8;j++) {
+					printf("%d ", oyun[i][j]);
+				}
+				printf("\n");
+			}
+		} 
+
+		//OLASI HAMLELER�N MATRIX �ZER�NE KAYDED�LMES�
+		pathfinder(oyun, sira, karsihamle);
+		for (int i = 0; i < 8;i++) {
+			for (int j = 0;j < 8;j++) {
+				if (oyun[i][j] == 3) {
+					al_draw_filled_circle(((80 * (j)) + 35), ((80 * (i)) + 35), 30, al_map_rgb(105, 105, 105));
+				}
+			}
+		}
+		if (hamle == 1) {
+			for (int i = 0; i < 8;i++) {
+				for (int j = 0;j < 8;j++) {
+					printf("%d ", oyun[i][j]);
+				}
+				printf("\n");
+			}
+		}
+
+		// OLASI HAMLELER�N SAKLANMASI
+		explorer(depo, oyun);
+
+		if (hamle == 1) {
+			for (int i = 0; i < 50;i++) {
+				for (int j = 0;j < 2;j++) {
+					printf("%d ", depo[i][j]);
+				}
+				printf("\n");
+			}
+		}
+		
+		// KLAVYE KONTROLLER�
+		if (ev.keyboard.keycode == ALLEGRO_KEY_RIGHT) {
+			xpos += 20;
+		}
+		else if (ev.keyboard.keycode == ALLEGRO_KEY_LEFT) {
+			xpos -= 20;
+		}
+		else if (ev.keyboard.keycode == ALLEGRO_KEY_UP) {
+			ypos -= 20;
+		}
+		else if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN) {
+			ypos += 20;
+		}
+		else if (ev.keyboard.keycode == ALLEGRO_KEY_E) {
+			// HEDEF�N KONTROL� SE��LMES�
+			int z = controller(xpos, ypos, depo);
+			int w, q;
+			if (z != 99) {
+				q = z % 10;
+				w = ((z - q) / 10);
+				oyun[w][q] = 4;
+
+
+				//UYGUN HEDEF�N YARATTI�I DE����KL�KLER�N MATR�XE YANSIMASI
+				changer(oyun, sira, karsihamle);
+				for (i = 0; i < 8;i++) {
+					for (j = 0;j < 8;j++) {
+						if (oyun[i][j] == 4) {
+							oyun[i][j] = sira;          
+
+						}
+					}
+				}
+				for (i = 0; i < 50;i++) {
+					depo[i][0] = 0;
+					depo[i][1] = 0;
+				}
+				hamle = hamle + 1;
+
+
+				if (sira == 1) {
+					sira = 2;
+					karsihamle = 1;
+				}
+				else if (sira == 2) {
+					sira = 1;
+					karsihamle = 2;
+				}
+			}
+		}
+
+		al_draw_circle(xpos, ypos, 20, al_map_rgb(138, 43, 226), 10);
+		al_flip_display();
+	}
+
+	system("pause");
+	return 0;
+}
